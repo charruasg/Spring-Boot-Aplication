@@ -55,7 +55,7 @@ public class User implements Serializable{
 	private String password;
 	
 	@Transient
-	@NotBlank
+	
 	private String confirmPassword;
 	
 	@ManyToMany(fetch = FetchType.LAZY)
@@ -65,10 +65,12 @@ public class User implements Serializable{
 	private Set<Role> roles;
 	
 	public User() {
+		super();
 		
 	}
 
 	public User(Long id) {
+		super();
 		this.id = id;
 	}
 
