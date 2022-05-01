@@ -19,18 +19,27 @@
 	
 	<!-- Los iconos tipo Solid de Fontawesome-->
 	<link rel="stylesheet"
+		href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+	<script 
+		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+	
+	<!-- Los iconos tipo Solid de Fontawesome-->
+	<link rel="stylesheet"
 		href="https://use.fontawesome.com/releases/v5.0.8/css/solid.css">
 	<script src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
 	
 	<!-- Nuestro css-->
 	<link rel="stylesheet" type="text/css" href="static/css/user-form.css"
 		th:href="@{/css/user-form.css}">
+
 	<!-- DATA TABLE -->
 	<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 	<script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.css">	
 	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
-
+	
 	<script type="text/javascript">
 	    $(document).ready(function() {
 	        //Asegurate que el id que le diste a la tabla sea igual al texto despues del simbolo #
@@ -77,12 +86,24 @@
 									<td th:text="${user.email}"></td>
 									<td>
 										<a href="#" th:href="@{'/editUser/'+ ${user.id}}"><i class="fas fa-edit"></i></a> 
-										| <a href="#" th:onclick="'javascript:confirmDelete(\''+ ${user.id} +'\');'"><i class="fas fa-user-times"></i></a>
+										<a href="#" th:onclick="'javascript:confirmDelete(\''+ ${user.id} +'\');'"><i class="fas fa-user-times"></i></a>
 									</td>
 								</tr>
 								</tbody>
 							</table>
+							<div class="alert alert-danger text-center" th:if="${listErrorMessage}" th:text="${listErrorMessage}">Error Message</div>
 						</div>
+						<script type="text/javascript">
+							function confirmDelete(id){
+								$('#deleteModal').modal('show');
+								$("#userIdHiddenInput").val(id);
+							}
+
+							function deleteUser(){
+								var id = $("#userIdHiddenInput").val();
+   								window.location = "deleteUser/"+id;
+							}
+						</script>
 
 					</div>
 				</div>
@@ -166,5 +187,6 @@
 		</div>
 	</div>
 </div>
+<div th:include="confirm-delete-dialog.html" th:remove="tag"></div>
 </body>
 </html>
