@@ -3,6 +3,9 @@ package com.GF.GestiondeForraje.service;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.GF.GestiondeForraje.dto.ChangePasswordForm;
@@ -14,6 +17,9 @@ public class UserServiceImpl implements UserService {
 	
 	@Autowired
 	UserRepository repository;
+	
+	@Autowired
+	BCryptPasswordEncoder bCryptPasswordEncoder;
 	
 	@Override
 	public Iterable<User> getAllUsers() {
@@ -43,6 +49,9 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public User createUser(User user) throws Exception {
 		if(checkUsernameAvailable(user)&&checkPasswordValid(user)) {
+			
+			String encodePassword = bCryptPasswordEncoder.encode(user.getPassword());
+			user.setPassword(encodePassword);
 			user = repository.save(user);
 		}
 		return user;
@@ -80,19 +89,46 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public User changePassword(ChangePasswordForm form) throws Exception {
+	/*
 		User user = getUserById(form.getId());
+	*/	
+		User storedUser = repository
+				.findById( form.getId() )
+				.orElseThrow(() -> new Exception("UsernotFound in ChangePassword."));
+
+		if( !isLoggedUserADMIN() && form.getCurrentPassword().equals(storedUser.getPassword())) {
+			throw new Exception("Current Password Incorrect.");
 		
-		if(!user.getPassword().equals(form.getCurrentPassword())) {
-			throw new Exception ("Current Password invalido.");
 		}
-		if(user.getPassword().equals(form.getNewPassword())) {
+		if(storedUser.getPassword().equals(form.getNewPassword())) {
 			throw new Exception ("Nuevo Password debe ser diferente al Password actual.");
 		}
 		if(!form.getNewPassword().equals(form.getConfirmPassword())) {
 			throw new Exception ("Nuevo Password y Current Password no coinciden.");
 		}
-		user.setPassword(form.getNewPassword());
-		return repository.save(user);
+		
+		String encodePassword = bCryptPasswordEncoder.encode(form.getNewPassword());
+		storedUser.setPassword(encodePassword);
+		return repository.save(storedUser);
+	
 		
 	}
+	
+	public boolean isLoggedUserADMIN(){
+		 return loggedUserHasRole("ROLE_ADMIN");
+		}
+
+		public boolean loggedUserHasRole(String role) {
+			Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+			UserDetails loggedUser = null;
+			Object roles = null; 
+			if (principal instanceof UserDetails) {
+				loggedUser = (UserDetails) principal;
+			
+				roles = loggedUser.getAuthorities().stream()
+						.filter(x -> role.equals(x.getAuthority() ))      
+						.findFirst().orElse(null); //loggedUser = null;
+			}
+			return roles != null ?true :false;
+		}
 }

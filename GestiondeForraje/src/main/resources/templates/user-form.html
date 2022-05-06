@@ -57,6 +57,9 @@
 			<li class="nav-item">
 			<a class="nav-link" th:classappend=" ${formTab}" id="form-tab" data-toggle="tab" href="#form" role="tab" aria-controls="form" aria-selected="true">Form</a>				   	
 			</li>
+			<li class="nav-item">
+			<a class="nav-link" href="#" th:href="@{/logout}"><span th:text="${#authentication.getPrincipal().getUsername()}"></span> - <span>logout  </span><span class="float-right"><i class="fas fa-sign-out-alt"></i></span></a>				   	
+			</li>
 		</ul>
 		<div class="tab-content" id="myTabContent">
 			<div class="tab-pane fade show" th:classappend=" ${listTab}" id="list" role="tabpanel" aria-labelledby="list-tab">
@@ -85,8 +88,13 @@
 									<td th:text="${user.username}"></td>
 									<td th:text="${user.email}"></td>
 									<td>
-										<a href="#" th:href="@{'/editUser/'+ ${user.id}}"><i class="fas fa-edit"></i></a> 
-										<a href="#" th:onclick="'javascript:confirmDelete(\''+ ${user.id} +'\');'"><i class="fas fa-user-times"></i></a>
+										<span th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')} or (${#authorization.expression('hasRole(''ROLE_USER'')')} and ${#httpServletRequest.remoteUser==user.username})">
+   									 		<a href="#" th:href="@{'/editUser/'+ ${user.id}}"><i class="fas fa-edit"></i></a>
+										</span>
+										<span th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}" >
+	 										<a href="#" th:onclick="'javascript:confirmDelete(\''+ ${user.id} +'\');'"><i class="fas fa-user-times"></i></a>
+										</span>
+											
 									</td>
 								</tr>
 								</tbody>
@@ -114,6 +122,8 @@
 						<h4>User Information</h4>
 					</div>
 					<div class="card-body">
+					    <div th:with="disableFields=!${editMode} and ${#authorization.expression('hasRole(''ROLE_USER'')')}">
+					    
 						<form class="form" role="form" autocomplete="off" th:object="${userForm}" th:action="${editMode} ?@{/editUser} :@{/userForm}"  method="post">
 							<input class="form-control" type=hidden th:field="${userForm.id}" value="xxxx" th:if="${editMode}">
 							<input class="form-control" type=hidden name="password" value="xxxx" th:if="${editMode}">
@@ -122,7 +132,7 @@
 							<div class="form-group row">
 								<label class="col-lg-3 col-form-label form-control-label">First name</label>
 								<div class="col-lg-9">
-									<input class="form-control" type="text" th:field="${userForm.firstName}">
+									<input class="form-control" type="text" th:field="${userForm.firstName}" th:disabled="${disableFields}">
 									<div class="alert-danger" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">Name Error</div>
 								</div>
 							</div>
@@ -130,28 +140,28 @@
 								<label class="col-lg-3 col-form-label form-control-label">Last
 									name</label>
 								<div class="col-lg-9">
-									<input class="form-control" type="text" th:field="${userForm.lastName}">
+									<input class="form-control" type="text" th:field="${userForm.lastName}" th:disabled="${disableFields}">
 									<div class="alert-danger" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">Name Error</div>
 								</div>
 							</div>
 							<div class="form-group row">
 								<label class="col-lg-3 col-form-label form-control-label">Email</label>
 								<div class="col-lg-9">
-									<input class="form-control" type="email" th:field="${userForm.email}">
+									<input class="form-control" type="email" th:field="${userForm.email}" th:disabled="${disableFields}">
 									<div class="alert-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Name Error</div>
 								</div>
 							</div>
 							<div class="form-group row">
 								<label class="col-lg-3 col-form-label form-control-label">Username</label>
 								<div class="col-lg-9">
-									<input class="form-control" type="text" th:field="${userForm.username}">
+									<input class="form-control" type="text" th:field="${userForm.username}" th:disabled="${disableFields}">
 									<div class="alert-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Name Error</div>
 								</div>
 							</div>
 							<div class="form-group row">
 								<label th:text="Roles" class="col-lg-3 col-form-label form-control-label"></label>
 								<div class="col-lg-9">
-									<select class="form-control" size="3" th:field="${userForm.roles}">
+									<select class="form-control" size="3" th:field="${userForm.roles}" th:disabled="${disableFields}">
 										<option th:each="role :${roles}" th:value="${role.id}" th:text="${role.name}">
 										</option>
 									</select>
@@ -161,14 +171,14 @@
 							<div class="form-group row" th:if="${editMode==null or editMode==false}">
 								<label class="col-lg-3 col-form-label form-control-label">Password</label>
 								<div class="col-lg-9">
-									<input class="form-control" type="password" th:field="${userForm.password}">
+									<input class="form-control" type="password" th:field="${userForm.password}" th:disabled="${disableFields}">
 									<div class="alert-danger" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Name Error</div>
 								</div>
 							</div>
 							<div class="form-group row" th:if="${editMode==null or editMode==false}">
 								<label class="col-lg-3 col-form-label form-control-label">Confirm</label>
 								<div class="col-lg-9">
-									<input class="form-control" type="password" th:field="${userForm.confirmPassword}">
+									<input class="form-control" type="password" th:field="${userForm.confirmPassword}" th:disabled="${disableFields}">
 									<div class="alert-danger" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">Name Error</div>
 								</div>
 							</div>
@@ -182,6 +192,7 @@
 							<div class="alert alert-danger text-center" th:if="${formErrorMessage}" th:text="${formErrorMessage}">Error Message</div>
 							<div class="alert alert-success text-center d-none" id="formSuccess" th:if="${editMode}" >Success Message</div>
 						</form>
+						</div>
 					</div>
 				</div>
 			</div>
